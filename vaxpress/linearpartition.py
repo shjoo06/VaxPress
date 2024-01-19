@@ -1,6 +1,3 @@
-# python3 ./linearpartition.py <sequence>
-# for now, print everything in stdout
-
 import os
 import sys
 import subprocess as sp
@@ -54,10 +51,10 @@ def run_linearpartition(linearpartition_dir, sequence):
         proc.stdin.write(sequence.encode())
         proc.stdin.write(b'\n')
         proc.stdin.close()
-        for chunk in read_live_updates(proc.stdout):
-            print(chunk, end='')
-        for chunk in read_live_updates(proc.stderr):
-            print(chunk, end='')
+        #for chunk in read_live_updates(proc.stdout):
+        #    print(chunk, end='')
+        #for chunk in read_live_updates(proc.stderr):
+        #    print(chunk, end='')
         if (proc.wait() != 0):
             raise RuntimeError('linearpartition failed with exit code {}'.format(proc.returncode))
 
@@ -81,7 +78,7 @@ def parse_linearpartition_output(tmp_outfile, n):
             # calculate Pi
             Pi[int(line[0])] += float(line[2])
             Pi[int(line[1])] += float(line[2])
-    os.remove(tmp_outfile)
+    os.remove(tmp_outfile) #
     return Pi
 
 def calculate_aup(Pi, sequence):
@@ -96,14 +93,8 @@ def calculate_aup(Pi, sequence):
 
     return average_unpaired_probability, unpaired_ucount
 
-def main(args):
+def get_pairingprob(sequence):
     linearpartition_dir = os.path.abspath("/qbio/shjo/2_vaccine_design/base_pairing/LinearPartition") # later needs to be changed
-    sequence = args[1]
     tmp_outfile = run_linearpartition(linearpartition_dir, sequence)
     Pi = parse_linearpartition_output(tmp_outfile, len(sequence))
-    aup, unp_ucount = calculate_aup(Pi, sequence)
-    print(f"average unpaired probability = {round(aup,3)}")
-    print(f"unpaired ucount = {round(unp_ucount,3)}")
-
-if __name__ == '__main__':
-    main(sys.argv)
+    return calculate_aup(Pi, sequence)
