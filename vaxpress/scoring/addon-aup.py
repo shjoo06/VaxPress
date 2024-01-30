@@ -1,6 +1,6 @@
 from vaxpress.scoring import ScoringFunction
 import re
-from vaxpress import linearpartition
+import linearpartition as lp
 
 class PairingProbFitness(ScoringFunction):
 
@@ -11,8 +11,8 @@ class PairingProbFitness(ScoringFunction):
 
     arguments = [
         ('weight', dict(metavar='WEIGHT',
-            type=float, default=-10.0,
-            help='weight for unpaired probability (default: -10.0)')),
+            type=float, default=-8.0,
+            help='weight for AUP (default: -8.0)')),
     ]
 
     def __init__(self, weight, _length_cds):
@@ -21,17 +21,29 @@ class PairingProbFitness(ScoringFunction):
 
     def score(self, seqs):
         aups = []
-        #unpaired_ucounts = []    # choose 1 of 2
         scores = []
         for seq in seqs:
-            aup, unpaired_ucount = linearpartition.get_pairingprob(seq)
+            bpmtx, fe = lp.partition(seq)
+            Pi = {i: 0 for i in range(0, self.length)}
+            for ijprob in bpmtx:   # bpmtx: list of tuples (i, j, Pij)
+                Pi[ijprob[0]] += ijprob[2]
+                Pi[ijprob[1]] += ijprob[2]
+            # calculate aup
+            sup = sum(1 - Pi[i] for i in Pi)
+            aup = sup / self.length
+
             aups.append(aup)
-            #unpaired_ucounts.append(unpaired_ucount)
             scores.append(aup * self.weight)
 
         return {self.name: scores}, {self.name: aups}
 
     def annotate_sequence(self, seq):
-        aup, unpaired_ucount = linearpartition.get_pairingprob(seq)
+        bpmtx, fe = lp.partition(seq)
+        Pi = {i: 0 for i in range(0, self.length)}
+        for ijprob in bpmtx:
+            Pi[ijprob[0]] += ijprob[2]
+            Pi[ijprob[1]] += ijprob[2]
+
+        sup = sum(1 - Pi[i] for i in Pi)
+        aup = sup / self.length
         return {self.name: aup}
-    
