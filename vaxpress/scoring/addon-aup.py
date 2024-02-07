@@ -1,6 +1,7 @@
 from vaxpress.scoring import ScoringFunction
 import re
 import linearpartition as lp
+import numpy as np
 
 class PairingProbFitness(ScoringFunction):
 
@@ -23,27 +24,24 @@ class PairingProbFitness(ScoringFunction):
         aups = []
         scores = []
         for seq in seqs:
-            bpmtx, fe = lp.partition(seq)
-            Pi = {i: 0 for i in range(0, self.length)}
-            for ijprob in bpmtx:   # bpmtx: list of tuples (i, j, Pij)
-                Pi[ijprob[0]] += ijprob[2]
-                Pi[ijprob[1]] += ijprob[2]
-            # calculate aup
-            sup = sum(1 - Pi[i] for i in Pi)
+            bpmtx, _ = lp.partition(seq)
+
+            bpmtx_square = np.concatenate((bpmtx, np.array([(x[1], x[0], x[2]) for x in bpmtx], dtype=bpmtx.dtype)))
+            _, inverse_indices = np.unique(bpmtx_square['i'], return_inverse=True)
+            sup = np.sum(1 - np.bincount(inverse_indices, weights=bpmtx_square['prob']))
             aup = sup / self.length
 
             aups.append(aup)
             scores.append(aup * self.weight)
-
         return {self.name: scores}, {self.name: aups}
 
     def annotate_sequence(self, seq):
         bpmtx, fe = lp.partition(seq)
-        Pi = {i: 0 for i in range(0, self.length)}
-        for ijprob in bpmtx:
-            Pi[ijprob[0]] += ijprob[2]
-            Pi[ijprob[1]] += ijprob[2]
+        bpmtx_transposed = np.array([(x[1], x[0], x[2]) for x in bpmtx], dtype=[('i', '<i4'), ('j', '<i4'), ('prob', '<f8')])
+        bpmtx_square = np.concatenate((bpmtx, bpmtx_transposed))
+        _, inverse_indices = np.unique(bpmtx_square['i'], return_inverse=True)
+        OneMinusPi = 1 - np.bincount(inverse_indices, weights=bpmtx_square['prob'])
 
-        sup = sum(1 - Pi[i] for i in Pi)
+        sup = np.sum(OneMinusPi)
         aup = sup / self.length
         return {self.name: aup}
