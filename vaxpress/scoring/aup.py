@@ -1,5 +1,4 @@
 from vaxpress.scoring import ScoringFunction
-import re
 import numpy as np
 
 class PairingProbFitness(ScoringFunction):
