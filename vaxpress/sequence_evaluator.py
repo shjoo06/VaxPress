@@ -47,18 +47,23 @@ class PairingProbEvaluator:
 
     def __call__(self, seq):
         bpmtx, fe = self._pairingprob(seq)
-        sup = self.get_sup(bpmtx)
+        Pi_array = self.get_pairingprobs(bpmtx)
 
-        return {'sup': sup}
+        return {'Pi_array': Pi_array}
 
     @staticmethod
-    def get_sup(bpmtx):
-        # currently, just returns SUP
-        bpmtx_square = np.concatenate((bpmtx, np.array([(x[1], x[0], x[2]) for x in bpmtx], dtype=bpmtx.dtype)))
-        _, inverse_indices = np.unique(bpmtx_square['i'], return_inverse=True)
-        sup = np.sum(1 - np.bincount(inverse_indices, weights=bpmtx_square['prob']))
+    def get_pairingprobs(bpmtx):
+        # returns array of Pi (index = i)
+        indexes = np.vstack((bpmtx['i'], bpmtx['j'])).T
+        prob = bpmtx[['prob']]
+        indexes = np.concatenate((indexes, indexes[:, [1, 0]]))
+        prob = np.concatenate((prob, prob))
 
-        return sup
+        sorted_index = np.argsort(indexes[:,0])
+        indexes = indexes[sorted_index]
+        prob = prob[sorted_index]
+        prob = prob.astype(np.float64)
+        return np.bincount(indexes[:,0], weights=prob)
 
 class FoldEvaluator:
 

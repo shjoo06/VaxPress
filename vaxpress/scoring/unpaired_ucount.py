@@ -12,7 +12,7 @@ class UnpairedUridineFitness(ScoringFunction):
     arguments = [
         ('weight', dict(metavar='WEIGHT',
             type=float, default=-5.0,
-            help='weight for unpaired ucount (default: -5.0)')),
+            help='weight for unpaired ucount (default: -3.0)')),
     ]
 
 
@@ -21,14 +21,20 @@ class UnpairedUridineFitness(ScoringFunction):
         self.length = _length_cds
 
     def score(self, seqs, pairingprobs):
-        ucounts = [seq.count('U') for seq in seqs]
-        unpaired_ucounts = [(pairingprob['sup']/self.length) * ucount for pairingprob, ucount in zip(pairingprobs, ucounts)]
-        scores = [unpaired_ucount * self.weight for unpaired_ucount in unpaired_ucounts]
+        U_sups = []
+        for seq, pairingprob in zip(seqs, pairingprobs):
+            U_idx = [i for i, base in enumerate(seq) if base == 'U']
+            Pi_array = pairingprob['Pi_array']
+            # sum only the Pi of the U index
+            total_unpairedu_probs = sum(1 - Pi_array[i] for i in U_idx) # to be minimized
+            U_sups.append(total_unpairedu_probs)
+        scores = [u_sup * self.weight for u_sup in U_sups]
 
-        return {self.name: scores}, {self.name: unpaired_ucounts}
+        return {self.name: scores}, {self.name: U_sups}
 
     def annotate_sequence(self, seq, pairingprob):
-        ucount = seq.count('U')
-        unpaired_ucount = (pairingprob['sup']/self.length) * ucount
-        return {self.name: unpaired_ucount}
+        U_idx = [i for i, base in enumerate(seq) if base == 'U']
+        Pi_array = pairingprob['Pi_array']
+        U_sup = sum(1 - Pi_array[i] for i in U_idx) 
+        return {self.name: U_sup}
 
