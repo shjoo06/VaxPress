@@ -11,7 +11,7 @@ class UnpairedUridineFitness(ScoringFunction):
 
     arguments = [
         ('weight', dict(metavar='WEIGHT',
-            type=float, default=-5.0,
+            type=float, default=-3.0,
             help='weight for unpaired ucount (default: -3.0)')),
     ]
 

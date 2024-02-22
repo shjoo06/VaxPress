@@ -11,7 +11,7 @@ class PairingProbFitness(ScoringFunction):
 
     arguments = [
         ('weight', dict(metavar='WEIGHT',
-            type=float, default=-8.0,
+            type=float, default=-5.0,
             help='weight for AUP (default: -5.0)')),
     ]
 
