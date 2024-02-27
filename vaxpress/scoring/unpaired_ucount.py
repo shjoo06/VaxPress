@@ -24,7 +24,8 @@ class UnpairedUridineFitness(ScoringFunction):
         U_sups = []
         for seq, pairingprob in zip(seqs, pairingprobs):
             U_idx = [i for i, base in enumerate(seq) if base == 'U']
-            Pi_array = pairingprob['Pi_array']
+            Pi_cooarray = pairingprob['Pi_array']
+            Pi_array = Pi_cooarray.sum(axis=0)
             # sum only the Pi of the U index
             total_unpairedu_probs = sum(1 - Pi_array[i] for i in U_idx) # to be minimized
             U_sups.append(total_unpairedu_probs)
@@ -34,7 +35,8 @@ class UnpairedUridineFitness(ScoringFunction):
 
     def annotate_sequence(self, seq, pairingprob):
         U_idx = [i for i, base in enumerate(seq) if base == 'U']
-        Pi_array = pairingprob['Pi_array']
-        U_sup = sum(1 - Pi_array[i] for i in U_idx) 
+        Pi_cooarray = pairingprob['Pi_array']
+        Pi_array = Pi_cooarray.sum(axis=0)
+        U_sup = sum(1 - Pi_array[i] for i in U_idx)
         return {self.name: U_sup}
 

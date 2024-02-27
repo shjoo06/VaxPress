@@ -31,6 +31,7 @@ from concurrent import futures
 from collections import Counter
 from .log import hbar_stars, log
 import numpy as np
+from scipy import sparse
 
 class PairingProbEvaluator:
 
@@ -47,23 +48,18 @@ class PairingProbEvaluator:
 
     def __call__(self, seq):
         bpmtx, fe = self._pairingprob(seq)
-        Pi_array = self.get_pairingprobs(bpmtx)
+        Pi_cooarray = self.get_pairingprobs(bpmtx, seq)
 
-        return {'Pi_array': Pi_array}
+        return {'Pi_array': Pi_cooarray}
 
     @staticmethod
-    def get_pairingprobs(bpmtx):
-        # returns array of Pi (index = i)
-        indexes = np.vstack((bpmtx['i'], bpmtx['j'])).T
-        prob = bpmtx[['prob']]
-        indexes = np.concatenate((indexes, indexes[:, [1, 0]]))
-        prob = np.concatenate((prob, prob))
-
-        sorted_index = np.argsort(indexes[:,0])
-        indexes = indexes[sorted_index]
-        prob = prob[sorted_index]
-        prob = prob.astype(np.float64)
-        return np.bincount(indexes[:,0], weights=prob)
+    def get_pairingprobs(bpmtx, seq):
+        # returns scipy sparse matrix (coo_array)
+        I = bpmtx['i']
+        J = bpmtx['j']
+        prob = bpmtx['prob']
+        A = sparse.coo_array((prob, (I, J)), shape=(len(seq), len(seq)))
+        return (A+A.T)
 
 class FoldEvaluator:
 
