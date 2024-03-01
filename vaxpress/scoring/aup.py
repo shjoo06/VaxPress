@@ -15,8 +15,8 @@ class PairingProbFitness(ScoringFunction):
             type=float, default=-5.0,
             help='weight for AUP (default: -5.0)')),
         ('base_weights', dict(metavar='BASE_WEIGHTS',
-            type=dict, default={'A': 1, 'C': 1, 'G': 1, 'U': 3},
-            help='weights for each base (default: {"A": 1, "C": 1, "G": 1, "U": 3})')),
+            type=dict, default={'A': 1.5, 'C': 1, 'G': 1, 'U': 3},
+            help='weights for each base (default: {"A": 1.5, "C": 1, "G": 1, "U": 3})')),
     ]
 
     def __init__(self, weight, base_weights, _length_cds):
