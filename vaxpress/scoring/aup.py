@@ -26,17 +26,15 @@ class PairingProbFitness(ScoringFunction):
 
     def score(self, seqs, pairingprobs):
         weighted_aups = []
-        normalized_weights = np.array([self.base_weights[base]/sum(self.base_weights.values()) for base in 'ACGU']) # ACGU 순서로
+        weights = np.array([self.base_weights[base] for base in 'ACGU']) # ACGU 순서로
         for seq, pairingprob in zip(seqs, pairingprobs):
             Pi_cooarray = pairingprob['Pi_array']
             Pi_array = Pi_cooarray.sum(axis=0)
-            assert len(seq) == len(Pi_array)
             seqindex = np.frombuffer(seq.encode('utf-8').translate(bytes.maketrans(b'ACGU', b'\x00\x01\x02\x03')), dtype=np.uint8)
             # map weights to index
-            wi = np.choose(seqindex, normalized_weights)
+            wi = np.choose(seqindex, weights)
             xi = 1.0 - Pi_array
-            assert len(Pi_array) == len(xi)
-            weighted_aup = np.dot(wi, xi)
+            weighted_aup = np.average(xi, weights=wi)
             weighted_aups.append(weighted_aup)
         scores = [weighted_aup * self.weight for weighted_aup in weighted_aups]
         return {self.name: scores}, {self.name: weighted_aups}
@@ -48,5 +46,5 @@ class PairingProbFitness(ScoringFunction):
         seqindex = np.frombuffer(seq.encode('utf-8').translate(bytes.maketrans(b'ACGU', b'\x00\x01\x02\x03')), dtype=np.uint8)
         wi = np.choose(seqindex, normalized_weights)
         xi = 1 - Pi_array
-        weighted_aup = np.dot(wi, xi)
+        weighted_aup = np.average(xi, weights=wi)
         return {self.name: weighted_aup}
